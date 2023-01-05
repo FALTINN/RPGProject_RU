@@ -12,7 +12,7 @@ def registration():
     pass
 
 
-def hit_the_spot(place_of_impact, the_thing_to_hit, which_beats: Hero, who_is_being_beaten: Character):#поменять потом к каким классам отсылает
+def hit_the_spot(place_of_impact, the_thing_to_hit, which_beats: Hero, who_is_being_beaten: Character):#А зачем она нужна, эт оможно в классах реализовать
     
     places_to_hit_and_their_chance = {
         'лук': {
@@ -51,7 +51,7 @@ def hit_the_spot(place_of_impact, the_thing_to_hit, which_beats: Hero, who_is_be
             print('Вы промахнулись, хнык-хнык')
     
 
-def New_level(which_get_new_level: Hero):
+def New_level(which_get_new_level: Hero):#Да, кинуть функцию в класс Hero
 
     level_list = (0, 50, 200, 400, 900, 1500)#мб потом накинуть её в другое место
     

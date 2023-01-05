@@ -18,7 +18,8 @@ class Character:
         health: int, #Здоровье персонажа
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
-        consumable_list: list = list() #список зелей
+        consumable_list: list = list(), #список зелей
+        bow_list: list = list() #список луков
     ):
         self.name = name 
         self.health = health 
@@ -26,8 +27,9 @@ class Character:
         self.armor_list = armor_list
         self.weapon_list = weapon_list
         self.consumble_list = consumable_list
+        self.bow_list = bow_list
     
-    def update(self, enemy):#второе = это враг
+    def update(self, enemy):#второе - это враг
         deleteEffects = list()
         enemy.strike(self)
         for i in range(len(self.effects)):
@@ -97,9 +99,10 @@ class Enemy(Character):
         health: int, #Здоровье персонажа
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
-        consumable_list: list = list() #список зелей
+        consumable_list: list = list(), #список зелей
+        bow_list: list = list() #список луков
     ):
-        super().__init__(name, health, armor_list, weapon_list, consumable_list)  
+        super().__init__(name, health, armor_list, weapon_list, consumable_list, bow_list)  
  
 class Hero(Character):
     def __init__(
@@ -111,16 +114,25 @@ class Hero(Character):
         check_live: bool, #Жив ли персонаж или нет
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
-        consumable_list: list = list() #список зелей
+        consumable_list: list = list(), #список зелей
+        bow_list: list = list() #список луков
     ):
-        super().__init__(name, health, armor_list, weapon_list, consumable_list)
+        super().__init__(name, health, armor_list, weapon_list, consumable_list, bow_list)
         self.xp = xp
         self.level = level
         self.check_live = check_live#это мб на снос
     
     def fight(self, enemy: Enemy):
         while enemy.health and self.health > 0:
-            #the_thing_to_hit = input('Чем вы предпочтёте воспользоватся(Холодное оружие/Лук/Зелье): ').lower()
+            the_thing_to_hit = input('Чем вы предпочтёте воспользоватся(Холодное оружие/Лук/Зелье): ').lower()
+            while the_thing_to_hit != 'холодное оружие' and 'оружие' and 'лук' and 'зелье':
+                the_thing_to_hit = input('Что то неправильно. Чем вы предпочтёте воспользоватся(Холодное оружие/Лук/Зелье): ').lower()
+            if the_thing_to_hit == 'холодное оружие' and 'оружие':
+                self.weapon_used.use(self, enemy)
+            elif the_thing_to_hit == 'лук':
+                self.bow_used.use(self, enemy)#О да, функция bow_shot
+            else:
+                pass #логика зелей, совместимость с update
             #place_of_impact = input('Место удара(Голова/Туловище/Руки/Ноги): ').lower()
             #hit_the_spot(place_of_impact, the_thing_to_hit, self, who_is_being_beaten)
             #оптимизируй нормально функцию эту
@@ -152,24 +164,57 @@ class Hero(Character):
 
     def inventory(self, purpose_work_with_inventory):#вторая переменная - цель работы
         if purpose_work_with_inventory == 'информация':
-            print('Инвентарь - покажет весь ваш инвентарь')
+            print('Предметы - покажет весь ваш инвентарь')
             print('Основной предмет - вы сможете поставить броню/оружие как основное для использования в боях')
-        elif purpose_work_with_inventory == 'инвентарь':
+        elif purpose_work_with_inventory == 'предметы':
             print('Вся броня в вашем инвентаре:', ', '.join([x.name for x in self.armor_list]))
-            print('Всё оружие в вашем инвентаре:', ', '.join([x.name for x in self.weapon_list]))
+            print('Всё холодное оружие в вашем инвентаре:', ', '.join([x.name for x in self.weapon_list]))
+            print('Все луки в вашем инвентаре:', ', '.join([x.name for x in self.bow_list]))
             print('Все зелья в вашем инвентаре:', ', '.join([x.name for x in self.consumble_list]))
         elif purpose_work_with_inventory == 'основной предмет':
             Choosing_what_type_of_item = input('Какой тип предмета вы хотите поставить на использование?(броня/оружие)').lower()
             while Choosing_what_type_of_item != 'броня' and 'оружие':
                 Choosing_what_type_of_item = input('Что то не совпадает, попробуй ещё раз. Какой тип предмета вы хотите поставить на использование?(броня/оружие)').lower()
-
             if Choosing_what_type_of_item == 'броня':
-                bow_or_melee_weapon = input('Лук или оружие ближнего боя?').lower()
-                while bow_or_melee_weapon != 'лук' and 'оружие ближнего боя':
-                    bow_or_melee_weapon = input('Что то не совпадает, попробуй ещё раз. Лук или оружие ближнего боя?').lower()
-                self.armor_used = input('Выберите броню которую будете использовать:', ', '.join([x.name for x in self.armor_list]))
+                self.armor_used = input('Выберите броню которую будете использовать:', ', '.join([x.name for x in self.armor_list])).lower()
+                cycl_check = True
+                while cycl_check:
+                        for i in self.armor_list: 
+                            if i.name.lower() == self.armor_used:
+                                self.armor_used = i
+                                cycl_check = False
+                                break
+                        if not(cycl_check):
+                            break
+                        self.armor_used = input('Что то неправильно. Выберите броню которую будете использовать:', ', '.join([x.name for x in self.armor_list])).lower()
             elif Choosing_what_type_of_item == 'оружие':
-                self.weapon_used = input('Выберите оружие которое будете использовать:', ', '.join([x.name for x in self.weapon_list]))
+                bow_or_melee_weapon = input('Лук или холодное оружие?').lower()
+                while bow_or_melee_weapon != 'лук' and 'холодной оружие':
+                    bow_or_melee_weapon = input('Что то не совпадает, попробуй ещё раз. Лук или оружие ближнего боя?').lower()                 
+                if bow_or_melee_weapon == 'оружие':
+                    self.weapon_used = input('Выберите оружие которое будете использовать:', ', '.join([x.name for x in self.weapon_list])).lower()
+                    cycl_check = True
+                    while cycl_check:
+                        for i in self.weapon_list: 
+                            if i.name.lower() == self.weapon_used:
+                                self.weapon_used = i
+                                cycl_check = False
+                                break
+                        if not(cycl_check):
+                            break
+                        self.weapon_used = input('Что то неправильно. Выберите оружие которое будете использовать:', ', '.join([x.name for x in self.weapon_list])).lower() 
+                else:
+                    self.bow_used = input('Выберите лук который будете использовать:', ', '.join([x.name for x in self.bow_list])).lower()
+                    cycl_check = True
+                    while cycl_check:
+                        for i in self.bow_list: 
+                            if i.name.lower() == self.bow_used:
+                                self.bow_used = i
+                                cycl_check = False
+                                break
+                        if not(cycl_check):
+                            break
+                        self.bow_used = input('Что то неправильно. Выберите лук который будете использовать:', ', '.join([x.name for x in self.bow_list])).lower() 
         #ещё назначения
     
 
