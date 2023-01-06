@@ -16,6 +16,7 @@ class Character:
         self, 
         name: str, #Имя героя
         health: int, #Здоровье персонажа
+        level: int = 1, #уровень персонажа
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
         consumable_list: list = list(), #список зелей
@@ -24,6 +25,7 @@ class Character:
         self.name = name 
         self.health = health 
         self.effects = list()
+        self.level = level
         self.armor_list = armor_list
         self.weapon_list = weapon_list
         self.consumble_list = consumable_list
@@ -36,8 +38,10 @@ class Character:
             name, time, level = self.effects[i]
             if name in ['Горение', 'Яд']:
                 self.health -= level
+                print(self.name, 'получает урон от эффекта', self.effects[i])
             elif name == 'Исцеление':
                 self.health += level
+                print(self.name, 'восстанавливает здоровье')
             self.effects[i][1] -= 1
             if self.effects[i][1] <= 0:
                 deleteEffects.append(self.effects[i])
@@ -74,12 +78,13 @@ class Enemy(Character):
         self, 
         name: str, #Имя героя
         health: int, #Здоровье персонажа
+        level: int = 1, #уровень персонажа
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
         consumable_list: list = list(), #список зелей
         bow_list: list = list() #список луков
     ):
-        super().__init__(name, health, armor_list, weapon_list, consumable_list, bow_list)  
+        super().__init__(name, health, level, armor_list, weapon_list, consumable_list, bow_list)  
     
     def print_info(self):#Мб подправить в будущем
         print('Поприветствуйте злодея ->', self.name)
@@ -91,33 +96,40 @@ class Hero(Character):
         self, 
         name: str, #Имя героя
         health: int, #Здоровье персонажа
-        level: int, #Уровень персонажа
         xp: int, #Количество опыта персонажа
         check_live: bool, #Жив ли персонаж или нет
+        level: int = 1, #Уровень персонажа
         armor_list: list = list(), #список брони
         weapon_list: list = list(), #список оружия
         consumable_list: list = list(), #список зелей
         bow_list: list = list() #список луков
     ):
-        super().__init__(name, health, armor_list, weapon_list, consumable_list, bow_list)
+        super().__init__(name, health, level, armor_list, weapon_list, consumable_list, bow_list,)
         self.xp = xp
-        self.level = level
         self.check_live = check_live#это мб на снос
     
     def fight(self, enemy: Enemy):
         while enemy.health and self.health > 0:
             the_thing_to_hit = input('Чем вы предпочтёте воспользоватся(Холодное оружие/Дальнобойное оружие/Зелье): ').lower()
-            while the_thing_to_hit != 'холодное оружие' and 'оружие' and 'дальнобойное оружие' and 'зелье' and 'лук':
+            while the_thing_to_hit != 'холодное оружие' and 'холодное' and 'дальнобойное' and 'дальнобойное оружие' and 'зелье':
                 the_thing_to_hit = input('Что то неправильно. Чем вы предпочтёте воспользоватся(Холодное оружие/Дальнобойное оружие/Зелье): ').lower()
             if the_thing_to_hit == 'холодное оружие' and 'холодное':
                 self.weapon_used.use(self, enemy)
             elif the_thing_to_hit == 'дальнобойное оружие' and 'дальнобойное':
                 self.bow_used.use(self, enemy)
             else:
-                pass #логика зелей, совместимость с update
-            #place_of_impact = input('Место удара(Голова/Туловище/Руки/Ноги): ').lower()
-            #hit_the_spot(place_of_impact, the_thing_to_hit, self, who_is_being_beaten)
-            #оптимизируй нормально функцию эту
+                consumble_used = input('Выберите зелье которое будете использовать:', ', '.join([x.name for x in self.consumble_list])).lower()
+                cycl_check = True
+                while cycl_check:
+                        for i in self.consumble_list: 
+                            if i.name.lower() == consumble_used:
+                                i.use(self, enemy)
+                                cycl_check = False
+                                break
+                        if not(cycl_check):
+                            break
+                        consumble_used = input('Что то неправильно. Выберите броню которую будете использовать:', ', '.join([x.name for x in self.consumble_list])).lower()
+                
             enemy.update(self)
             if enemy.health <= 0:
                 print(enemy.name, 'пал в этом нелёгком бою\n')
@@ -135,6 +147,7 @@ class Hero(Character):
         print('Поприветствуйте героя ->', self.name)
         print('Уровень здоровья:', self.health)
         print('Уровень персонажа:', self.level)
+        print('Количество опыта:', self.xp)
     
     def New_level(self):
 
@@ -230,6 +243,7 @@ class Item:
         self.use_text = use_text
 
     def print_info_about_item(self):
+        print('Имя предмета:', self.name)
         print(self.description)
 
     def use(self):
@@ -249,20 +263,29 @@ class Consumable(Item):
         self.attribute = attribute
         self.value = value
 
-    def use(self, who_use: Hero):
+    def print_info_about_item(self):
+        super().print_info_about_item()
+
+        print('Атрибут зелья:', self.attribute)
+
+    def use(self, who_use: Character, target: Character = None):
         super().use()
+    
 
         # Если значение не задано, то сразу выходим из функции
         if self.value is None:
             return
 
-        if self.attribute == 'health':
+        if self.attribute == 'здоровье':
             who_use.health += self.value
-        elif self.attribute == 'xp':  # Зелька опыта, например
+        elif self.attribute == 'опыт':  # Зелька опыта, например
             who_use.get_xp(self.value)
-        elif self.attribute == 'Сам придумай что-нибудь :3':
-            # who_use.какой_то_атрибут = self.value
-            pass
+        elif self.attribute == 'негативные эффекты':
+            if target in None:
+                print('Вы получаете урон, из-за эффекта:', self.value[0])
+                who_use.health -= self.value[2]
+            else:
+                target.add_effect(self.value[0], self.value[1], self.value[2])
 
 class Weapon(Item):
     def __init__(
@@ -279,14 +302,24 @@ class Weapon(Item):
         },
         description: str = '',  # Описание предмета
         use_text: str = '{0} целится, используя {1}. -> УДАР! ',
+        rare: str = 'обычное', #редкость брони
     ):
         super().__init__(name, description, use_text)
         self.damage = damage
         self.crit_damage = crit_damage
         self.crit_chance = crit_chance
         self.places_to_hit_and_their_chance = places_to_hit_and_their_chance
+        self.rare = rare
 
-    def use(self, who_use: Character, target: Character, place_to_hit: str):  # target - цель
+    def print_info_about_item(self):
+        super().print_info_about_item()
+
+        print('Редкость оружия:', self.rare)
+        print('Уровень урона:', self.damage)
+        print('Шанс критического урона:', self.crit_chance)
+
+    def use(self, who_use: Character, target: Character):  # target - цель
+        place_to_hit = input('Место удара(Голова/Туловище/Руки/Ноги): ').lower()
         if self.crit_chance >= random():
             damage = self.crit_damage + randint(-5, 10)#Подправить потом разброс крит.урона
         else:
@@ -310,11 +343,19 @@ class Armor(Item):
         name: str,  # Название предмета
         damage_reduction_percentage: int, #Процент снижения урона от атаки
         description: str = 'Защищает вас',  # Описание предмета
-        use_text: str = 'Наносится удар по броне'
+        use_text: str = 'Наносится удар по броне',
+        rare: str = 'обычная', #редкость брони
     ):
         super().__init__(name, description, use_text)
         self.damage_reduction_percentage = damage_reduction_percentage
+        self.rare = rare
     
+    def print_info_about_item(self):
+        super().print_info_about_item()
+
+        print('Редкость брони:', self.rare)
+        print('Снижение на', self.damage_reduction_percentage + '% урона от оружия')
+
     def use(self, What_beats: Weapon, who_beats: Character, target: Character, damage: int):
         super().use()
 
@@ -322,4 +363,3 @@ class Armor(Item):
         who_beats.strike(target, damage, What_beats)
 
     #мб чето добавить для брони
-
