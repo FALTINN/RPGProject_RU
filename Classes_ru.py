@@ -54,40 +54,17 @@ class Character:
             else:
                 self.effects.append([name, time, level])
 
-    def strike(self, enemy):
-        hit = randint(self.power-10, self.power+10) 
+    def strike(self, enemy, damage, weapon):
         print( 
-        '-> УДАР! ' + self.name + ' атакует ' + enemy.name + 
-        'а с силой ' + str(hit) + ', используя ' + self.weapon + '\n') 
+        self.name + ' атакует ' + enemy.name + 
+        'а с силой ' + str(damage) + ', используя ' + weapon.name + '\n') 
  
  
-        enemy.armor -= hit 
-        if enemy.armor < 0: 
-            enemy.health += enemy.armor
-            enemy.armor = 0
-            if enemy.health < 0:
-                enemy.health = 0
+        if enemy.health < 0:
+            enemy.health = 0
 
             print(
-                enemy.name + ' покачнулся.\nКласс его брони упал до '
-                + str(enemy.armor) + ', а уровень здоровья до: '
-                + str(enemy.health) + '\n')
-    
-    def bow_shot(self, enemy):
-        hit = randint(self.power-5, self.power+5) 
-        print( 
-        '-> ВЫСТРЕЛ! ' + self.name + ' стреляет ' + enemy.name + 
-        'а с силой ' + str(hit) + ', используя ' + self.weapon + '\n') 
-
-
-        enemy.armor -= hit 
-        if enemy.armor < 0: 
-            enemy.health += enemy.armor
-            enemy.armor = 0
-
-            print(
-                enemy.name + ' покачнулся.\nКласс его брони упал до '
-                + str(enemy.armor) + ', а уровень здоровья до: '
+                enemy.name + ' покачнулся. Уровень здоровья опустился до: '
                 + str(enemy.health) + '\n')
 
  
@@ -103,7 +80,12 @@ class Enemy(Character):
         bow_list: list = list() #список луков
     ):
         super().__init__(name, health, armor_list, weapon_list, consumable_list, bow_list)  
+    
+    def print_info(self):#Мб подправить в будущем
+        print('Поприветствуйте злодея ->', self.name)
+        print('Уровень здоровья:', self.health)
  
+
 class Hero(Character):
     def __init__(
         self, 
@@ -124,13 +106,13 @@ class Hero(Character):
     
     def fight(self, enemy: Enemy):
         while enemy.health and self.health > 0:
-            the_thing_to_hit = input('Чем вы предпочтёте воспользоватся(Холодное оружие/Лук/Зелье): ').lower()
-            while the_thing_to_hit != 'холодное оружие' and 'оружие' and 'лук' and 'зелье':
-                the_thing_to_hit = input('Что то неправильно. Чем вы предпочтёте воспользоватся(Холодное оружие/Лук/Зелье): ').lower()
-            if the_thing_to_hit == 'холодное оружие' and 'оружие':
+            the_thing_to_hit = input('Чем вы предпочтёте воспользоватся(Холодное оружие/Дальнобойное оружие/Зелье): ').lower()
+            while the_thing_to_hit != 'холодное оружие' and 'оружие' and 'дальнобойное оружие' and 'зелье' and 'лук':
+                the_thing_to_hit = input('Что то неправильно. Чем вы предпочтёте воспользоватся(Холодное оружие/Дальнобойное оружие/Зелье): ').lower()
+            if the_thing_to_hit == 'холодное оружие' and 'холодное':
                 self.weapon_used.use(self, enemy)
-            elif the_thing_to_hit == 'лук':
-                self.bow_used.use(self, enemy)#О да, функция bow_shot
+            elif the_thing_to_hit == 'дальнобойное оружие' and 'дальнобойное':
+                self.bow_used.use(self, enemy)
             else:
                 pass #логика зелей, совместимость с update
             #place_of_impact = input('Место удара(Голова/Туловище/Руки/Ноги): ').lower()
@@ -154,23 +136,39 @@ class Hero(Character):
         print('Уровень здоровья:', self.health)
         print('Уровень персонажа:', self.level)
     
+    def New_level(self):
+
+        level_list = (0, 50, 200, 400, 900, 1500)#мб потом накинуть её в другое место
+        
+        if self.xp >= level_list[self.level]:
+            self.level += 1
+            print(
+            'У вас новый уровень. Господа, встречайте рыцаря средиземья с', 
+            self.level, 'уровнем\n')
+
     def add_item_to_inventory(self, type_to_item, item):
-        if type_to_item == 'оружие':
+        if type_to_item == 'холодное оружие':
             self.weapon_list.append(item)
-        if type_to_item == 'броня':
+        elif type_to_item == 'дальнобойное оружие':
+            self.bow_list.append(item)
+        elif type_to_item == 'броня':
             self.armor_list.append(item)
-        if type_to_item == 'зелье':
+        elif type_to_item == 'зелье':
             self.consumble_list.append(item)
+        
 
     def inventory(self, purpose_work_with_inventory):#вторая переменная - цель работы
+        
         if purpose_work_with_inventory == 'информация':
             print('Предметы - покажет весь ваш инвентарь')
             print('Основной предмет - вы сможете поставить броню/оружие как основное для использования в боях')
+        
         elif purpose_work_with_inventory == 'предметы':
             print('Вся броня в вашем инвентаре:', ', '.join([x.name for x in self.armor_list]))
             print('Всё холодное оружие в вашем инвентаре:', ', '.join([x.name for x in self.weapon_list]))
-            print('Все луки в вашем инвентаре:', ', '.join([x.name for x in self.bow_list]))
+            print('Всё дальнобойное оружие в вашем инвентаре:', ', '.join([x.name for x in self.bow_list]))
             print('Все зелья в вашем инвентаре:', ', '.join([x.name for x in self.consumble_list]))
+        
         elif purpose_work_with_inventory == 'основной предмет':
             Choosing_what_type_of_item = input('Какой тип предмета вы хотите поставить на использование?(броня/оружие)').lower()
             while Choosing_what_type_of_item != 'броня' and 'оружие':
@@ -187,11 +185,12 @@ class Hero(Character):
                         if not(cycl_check):
                             break
                         self.armor_used = input('Что то неправильно. Выберите броню которую будете использовать:', ', '.join([x.name for x in self.armor_list])).lower()
+            
             elif Choosing_what_type_of_item == 'оружие':
-                bow_or_melee_weapon = input('Лук или холодное оружие?').lower()
-                while bow_or_melee_weapon != 'лук' and 'холодной оружие':
+                bow_or_melee_weapon = input('Дальнобойное или холодное оружие?').lower()
+                while bow_or_melee_weapon != 'дальнобойное оружие' and 'холодной оружие' and 'дальнобойное' and 'холодное':
                     bow_or_melee_weapon = input('Что то не совпадает, попробуй ещё раз. Лук или оружие ближнего боя?').lower()                 
-                if bow_or_melee_weapon == 'оружие':
+                if bow_or_melee_weapon == 'холодное оружие' and 'холодное':
                     self.weapon_used = input('Выберите оружие которое будете использовать:', ', '.join([x.name for x in self.weapon_list])).lower()
                     cycl_check = True
                     while cycl_check:
@@ -203,8 +202,9 @@ class Hero(Character):
                         if not(cycl_check):
                             break
                         self.weapon_used = input('Что то неправильно. Выберите оружие которое будете использовать:', ', '.join([x.name for x in self.weapon_list])).lower() 
+                
                 else:
-                    self.bow_used = input('Выберите лук который будете использовать:', ', '.join([x.name for x in self.bow_list])).lower()
+                    self.bow_used = input('Выберите дальнобойное оружие которое будете использовать:', ', '.join([x.name for x in self.bow_list])).lower()
                     cycl_check = True
                     while cycl_check:
                         for i in self.bow_list: 
@@ -214,7 +214,7 @@ class Hero(Character):
                                 break
                         if not(cycl_check):
                             break
-                        self.bow_used = input('Что то неправильно. Выберите лук который будете использовать:', ', '.join([x.name for x in self.bow_list])).lower() 
+                        self.bow_used = input('Что то неправильно. Выберите дальнобойное оружие которое будете использовать:', ', '.join([x.name for x in self.bow_list])).lower() 
         #ещё назначения
     
 
@@ -271,23 +271,36 @@ class Weapon(Item):
         damage: int,  # Урон
         crit_damage: int,  # Критический урон
         crit_chance: float,  # Шанс крита: от 0 и до 1. 0.5 = 50%, 0.2 = 20% и т.д.
+        places_to_hit_and_their_chance: dict = {
+            'голова': randint(1, 5),
+            'туловище': randint(1, 1.5),
+            'руки': randint(1, 3),
+            'ноги': randint(1, 3)
+        },
         description: str = '',  # Описание предмета
-        use_text: str = '-> УДАР! {0} атакует {1} с силой {2}, используя {3}.',
+        use_text: str = '{0} целится, используя {1}. -> УДАР! ',
     ):
         super().__init__(name, description, use_text)
         self.damage = damage
         self.crit_damage = crit_damage
         self.crit_chance = crit_chance
+        self.places_to_hit_and_their_chance = places_to_hit_and_their_chance
 
-    def use(self, who_use: Character, target: Character):  # target - цель
+    def use(self, who_use: Character, target: Character, place_to_hit: str):  # target - цель
         if self.crit_chance >= random():
             damage = self.crit_damage + randint(-5, 10)#Подправить потом разброс крит.урона
         else:
             damage = self.damage
 
         print(
-            self.use_text.format(who_use.name, target.name, damage, self.name)
+            self.use_text.format(who_use.name, self.name)
         )
+        if self.places_to_hit_and_their_chance[place_to_hit] == 1:
+            who_use.armor_used.use(self, who_use, target, damage)
+
+        else:
+            print('Вы промахнулись, хнык-хнык')
+    
 
 '''
 Делаем небольшой рандом в изменение процента защиты, ситуации для лука/оружия ближнего боя
@@ -302,8 +315,11 @@ class Armor(Item):
         super().__init__(name, description, use_text)
         self.damage_reduction_percentage = damage_reduction_percentage
     
-    def use(self, What_beats: Weapon):
+    def use(self, What_beats: Weapon, who_beats: Character, target: Character, damage: int):
         super().use()
 
-        What_beats.damage -= What_beats.damage * (self.damage_reduction_percentage/100)
-    #снести все нафиг наверное, проработать трудную систему с надеванием брони/оружия
+        damage -= damage * (self.damage_reduction_percentage/100)
+        who_beats.strike(target, damage, What_beats)
+
+    #мб чето добавить для брони
+
