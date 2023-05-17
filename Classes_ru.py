@@ -91,7 +91,7 @@ class Enemy(Character):
         health: int, #Здоровье персонажа
         armor_used, #используемая броня
         weapon_used, #используемое оружие ближнего боя
-        bow_used, #используемое оружие дальнего боя
+        bow_used = None, #используемое оружие дальнего боя
         consumable_list: list = None, #список зелей, а нужен ли
         consumable_used = None, #используемые зелья, а нужны ли
         level: int = 1, #уровень персонажа
@@ -164,14 +164,14 @@ class Hero(Character):
                 break
             sleep(5)
 
-            if randint(1, 2) == 1: 
-                enemy.weapon_used.use(enemy, self, choice(['голова', 'туловище', 'руки', 'ноги']))
-            else:
-                enemy.bow_used.use(enemy, self, choice(['голова', 'туловище', 'руки', 'ноги']))
+
+            """if (enemy.bow_used is None):
+                enemy.bow_used.use(enemy, self, choice(['голова', 'туловище', 'руки', 'ноги']))"""
+            enemy.weapon_used.use(enemy, self, choice(['голова', 'туловище', 'руки', 'ноги']))
 
             self.update(enemy)
             if self.health <= 0:
-                print(self.name, 'Ваш герой увы пал...\nGameOver')
+                print(self.name, ', ваш герой увы пал...\nGameOver')
                 self.check_live = False
             sleep(3)
 
@@ -203,10 +203,10 @@ class Hero(Character):
 
 
     def create_level_list(self):
-        level_list = list()
+        self.level_list = list()
         q = 1.2
         for i in range(100):
-            level_list.append(round(10 * (1 - q**5) / (1 - q)))
+            self.level_list.append(round(10 * (1 - q**5) / (1 - q)))
             q += 0.05
 
 
