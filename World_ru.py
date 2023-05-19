@@ -1,5 +1,14 @@
-from Classes_ru import *
+from Classes.Item import Item
+from Classes.Artifact import Artifact
+from Classes.Consumable import Consumable
+from Classes.Weapon import Weapon
+from Classes.Armor import Armor
+from Classes.Character import Character
+from Classes.Hero import Hero
+from Classes.Enemy import Enemy
 from Logic_ru import *
+from time import sleep
+
 
 def prologue():
     Richard = Hero('Ричард', 25)

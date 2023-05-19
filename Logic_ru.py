@@ -1,5 +1,4 @@
 from random import randint
-from Classes_ru import *
 import sys
 
 sys.stdout.reconfigure(encoding='utf-8')
